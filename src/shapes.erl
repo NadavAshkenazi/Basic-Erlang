@@ -13,6 +13,9 @@
 -export([shapesArea/1, squaresArea/1, trianglesArea/1, shapesFilter/1, shapesFilter2/1]).
 
 
+
+%% ================ validity functions ========================
+
 isParametersValid(Shape) ->
   Params = element(2, Shape),
   element(2,Params) >= 0 andalso element(3,Params) >= 0.
@@ -26,13 +29,19 @@ isShapeValid(Shape) when erlang:is_tuple(Shape) ->
     true -> false
   end.
 
+%% validity recursive function
 isShapesListValid([]) -> true;
 isShapesListValid([H|T]) -> isShapeValid(H) andalso isShapesListValid(T).
-  
 
+
+%% validity auxiliary function
 isShapesValid(Shapes) when is_tuple(Shapes) andalso element(1, Shapes) =:= 'shapes' ->
     isShapesListValid(erlang:element(2, Shapes)).
 
+
+
+
+%% ================ Area functions ========================
 
 getTriangleArea(Shape) when erlang:element(1, Shape) =:= 'triangle' ->
   {dim, Base, Height} = erlang:element(2, Shape),
@@ -53,19 +62,24 @@ getShapeArea(Shape) ->
     erlang:element(1, Shape) =:= 'ellipse'-> getEllipseArea(Shape)
   end.
 
+%% Area recursive function
 getShapesListArea([]) -> 0;
 getShapesListArea([H|T]) ->
   getShapeArea(H) + getShapesListArea(T).
 
+%% Area auxiliary function
 shapesArea(Shapes) ->
   case isShapesValid(Shapes) of
     true -> getShapesListArea(element(2,Shapes))
   end.
 
+
+
 isSquare(Shape) ->
   {_Dim, Width, Height} = erlang:element(2, Shape),
   element(1,Shape) =:= 'rectangle' andalso Width == Height.
 
+%% Square Area recursive function
 getSquaresListArea([]) -> 0;
 getSquaresListArea([H|T]) ->
   case isSquare(H) of
@@ -73,11 +87,13 @@ getSquaresListArea([H|T]) ->
     false -> getSquaresListArea(T)
   end.
 
+%% Square area auxiliary function
 squaresArea(Shapes) ->
   case isShapesValid(Shapes) of
     true -> getSquaresListArea(element(2,Shapes))
   end.
 
+%% Triangle Area recursive function
 getTrianglesListArea([]) -> 0;
 getTrianglesListArea([H|T]) ->
   if
@@ -85,11 +101,14 @@ getTrianglesListArea([H|T]) ->
     true -> getTrianglesListArea(T)
   end.
 
+%% Triangle area auxiliary function
 trianglesArea(Shapes) ->
   case isShapesValid(Shapes) of
     true -> getTrianglesListArea(element(2,Shapes))
   end.
 
+
+%% ================ filter functions ========================
 
 shapesFilter(Shape, Shapes) ->
   case isShapesValid(Shapes) of
@@ -98,9 +117,11 @@ shapesFilter(Shape, Shapes) ->
       {shapes, lists:filter(IsShape, element(2,Shapes))}
 end.
 
+%% returns a filter function for ellipses, rectangles and triangles
 shapesFilter(Shape) when is_atom(Shape)->
   fun(Shapes) -> shapesFilter(Shape, Shapes) end.
 
+%% filter function for circles
 circleFilter(Shapes) ->
   case isShapesValid(Shapes) of
     true ->
@@ -110,6 +131,7 @@ circleFilter(Shapes) ->
       {shapes, lists:filter(IsCircle, element(2,Shapes))}
   end.
 
+%% filter function for squares
 squareFilter(Shapes) ->
   case isShapesValid(Shapes) of
     true ->
@@ -119,6 +141,7 @@ squareFilter(Shapes) ->
       {shapes, lists:filter(IsSquare, element(2,Shapes))}
   end.
 
+%% returns a filter function for circles, squares, ellipses, rectangles and triangles
 shapesFilter2(Shape) when is_atom(Shape) ->
   case Shape of
     'circle' -> (fun(Shapes) -> circleFilter(Shapes) end);
